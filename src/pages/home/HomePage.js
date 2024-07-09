@@ -40,22 +40,13 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   const [primaryReleaseYears, setPrimaryReleaseYears] = useState([
     DEFAULT_PRIMARY_RELEASE_YEAR,
   ]);
-  const [moviesListData, updateMoviesListData] = useImmer(() => {
-    const movieIds = [];
-    const moviesById = {};
-
-    initialMoviesList.forEach((movie) => {
-      movieIds.push(movie.id);
-      moviesById[movie.id] = movie;
-    });
-
-    return {
-      movieIds,
-      moviesById,
-      moviesByYear: {
-        [DEFAULT_PRIMARY_RELEASE_YEAR]: initialMoviesList,
-      },
-    };
+  const [moviesListData, updateMoviesListData] = useImmer({
+    moviesByYear: {
+      [DEFAULT_PRIMARY_RELEASE_YEAR]: initialMoviesList.slice(
+        0,
+        MAX_MOVIES_PER_YEAR
+      ),
+    },
   });
 
   const loadMoreMoviesRef = useRef(null);
@@ -77,19 +68,12 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   }, [searchParamGenreIds]);
 
   const updateInitialMoviesListData = () => {
-    const movieIds = [];
-    const moviesById = {};
-
-    initialMoviesList.forEach((movie) => {
-      movieIds.push(movie.id);
-      moviesById[movie.id] = movie;
-    });
-
     updateMoviesListData((draft) => {
-      draft.movieIds = movieIds;
-      draft.moviesById = moviesById;
       draft.moviesByYear = {
-        [DEFAULT_PRIMARY_RELEASE_YEAR]: initialMoviesList,
+        [DEFAULT_PRIMARY_RELEASE_YEAR]: initialMoviesList.slice(
+          0,
+          MAX_MOVIES_PER_YEAR
+        ),
       };
     });
   };
@@ -102,10 +86,11 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   const handleGenreFiltersChange = ({ isFilterSelected, filterValue }) => {
     let updatedGenreIds =
       filteredGenreIds instanceof Array ? [...filteredGenreIds] : [];
-    if (!isFilterSelected) {
-      updatedGenreIds.push(filterValue);
-    } else {
+
+    if (isFilterSelected) {
       updatedGenreIds = updatedGenreIds.filter((fil) => fil !== filterValue);
+    } else {
+      updatedGenreIds.push(filterValue);
     }
 
     if (updatedGenreIds.length) {
@@ -113,6 +98,12 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
     } else {
       searchParams.delete('genre');
     }
+
+    router.replace({ query: searchParams.toString() });
+  };
+
+  const handleSelectAllGenre = () => {
+    searchParams.delete('genre');
     router.replace({ query: searchParams.toString() });
   };
 
@@ -147,23 +138,10 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
         setPrimaryReleaseYears((val) => [newPrimaryReleaseYear, ...val]);
       }
 
-      const newMovieIds = [];
-      const newMoviesById = {};
-
-      movies.slice(0, MAX_MOVIES_PER_YEAR).forEach((movie) => {
-        newMovieIds.push(movie.id);
-        newMoviesById[movie.id] = movie;
-      });
-
       updateMoviesListData((draft) => {
-        draft.movieIds = [...draft.movieIds, ...newMovieIds];
-        draft.moviesById = {
-          ...draft.moviesById,
-          ...newMoviesById,
-        };
         draft.moviesByYear = {
           ...draft.moviesByYear,
-          [newPrimaryReleaseYear]: movies,
+          [newPrimaryReleaseYear]: movies.slice(0, MAX_MOVIES_PER_YEAR),
         };
       });
 
@@ -222,7 +200,7 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   }, []);
 
   let nodeToRender;
-  if (moviesListData.movieIds.length) {
+  if (primaryReleaseYears.length) {
     nodeToRender = (
       <>
         {primaryReleaseYears.map((year) => {
@@ -288,6 +266,19 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
         <PageContainer>
           {genresList.length ? (
             <Styles.FiltersWrapper>
+              <Styles.FilterChip
+                key="all_genre"
+                onClick={handleSelectAllGenre}
+                isSelected={!filteredGenreIds?.length}
+              >
+                <Styles.FilterText>All</Styles.FilterText>
+                <Styles.FilterSelectionIcon
+                  isSelected={!filteredGenreIds?.length}
+                >
+                  {!filteredGenreIds?.length ? <CheckIcon /> : <PlusIcon />}
+                </Styles.FilterSelectionIcon>
+              </Styles.FilterChip>
+
               {genresList.map(({ id: filterValue, name: filterLabel }) => {
                 const isFilterSelected =
                   filteredGenreIds instanceof Array &&
@@ -304,9 +295,7 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
                     }
                     isSelected={isFilterSelected}
                   >
-                    <Styles.FilterText isSelected={isFilterSelected}>
-                      {filterLabel}
-                    </Styles.FilterText>
+                    <Styles.FilterText>{filterLabel}</Styles.FilterText>
                     <Styles.FilterSelectionIcon isSelected={isFilterSelected}>
                       {isFilterSelected ? <CheckIcon /> : <PlusIcon />}
                     </Styles.FilterSelectionIcon>
