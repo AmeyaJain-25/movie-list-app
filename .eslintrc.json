@@ -1,0 +1,48 @@
+{
+  "root": true,
+  "env": {
+    "commonjs": true,
+    "es2022": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "next/core-web-vitals" // https://github.com/vercel/next.js/blob/v13.1.1/packages/eslint-config-next/index.js
+  ],
+  "parserOptions": {
+    "ecmaVersion": 13, //ES2022
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+
+  "rules": {
+    "no-console": "warn",
+    "semi": ["error", "always"],
+    "react/no-unescaped-entities": ["warn", { "forbid": [">", "}"] }],
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index"
+        ],
+        "pathGroups": [
+          {
+            "pattern": "~/assets/**",
+            "group": "internal",
+            "position": "after"
+          },
+          {
+            "pattern": "~/**",
+            "group": "internal"
+          }
+        ],
+        "newlines-between": "always"
+      }
+    ]
+  }
+}
