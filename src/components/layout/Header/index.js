@@ -1,34 +1,27 @@
 import { useTheme } from 'styled-components';
 
-import { Flex } from '~/components/atoms';
 import { TitleSmall } from '~/components/typography';
 
 import * as Styles from './index.styled';
 
-const Header = () => {
+const Header = ({ children }) => {
   const theme = useTheme();
 
   return (
-    <Styles.Root as="header">
-      <Styles.HeaderRoot>
-        <Styles.Container>
-          <Flex
-            alignItems="center"
-            justifyContent="space-between"
-            height="100%"
+    <Styles.HeaderRoot as="header">
+      <Styles.Container>
+        <Styles.LogoContainer href="/" title="Movie DB">
+          <TitleSmall
+            textAlign="center"
+            color={theme.colors.TEXT_NEGATIVE_NORMAL}
+            style={{ textTransform: 'uppercase' }}
           >
-            <Styles.LogoContainer href="/" title="Movie DB">
-              <TitleSmall
-                color={theme.colors.TEXT_NEGATIVE_NORMAL}
-                style={{ textTransform: 'uppercase' }}
-              >
-                MovieFix
-              </TitleSmall>
-            </Styles.LogoContainer>
-          </Flex>
-        </Styles.Container>
-      </Styles.HeaderRoot>
-    </Styles.Root>
+            MovieFix
+          </TitleSmall>
+        </Styles.LogoContainer>
+        {children}
+      </Styles.Container>
+    </Styles.HeaderRoot>
   );
 };
 

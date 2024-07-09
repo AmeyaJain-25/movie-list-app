@@ -2,24 +2,26 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useImmer } from 'use-immer';
+import { useTheme } from 'styled-components';
 
 import AppUIShell from '~/components/core/AppUIShell';
 import PageContainer from '~/components/layout/PageContainer';
 import { useRequestStates, useSearchParams } from '~/hooks';
 import { movieApi } from '~/api';
-import { Box, Flex } from '~/components/atoms';
+import { Box, Button, Flex } from '~/components/atoms';
 import { LabelXSmall, TitleXSmall } from '~/components/typography';
 import {
   DEFAULT_PRIMARY_RELEASE_YEAR,
   defaultApiParams,
   MAX_MOVIES_PER_YEAR,
 } from '~/constants';
+import Header from '~/components/layout/Header';
 
 import * as Styles from './HomePage.styled';
+import MoviesList from './components/MoviesList';
 
 import PlusIcon from '~public/assets/icons/plus.svg';
 import CheckIcon from '~public/assets/icons/check.svg';
-import CloseIcon from '~public/assets/icons/close.svg';
 
 const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   const pageTitle = 'Movie DB';
@@ -32,6 +34,7 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   const twitterDescription = pageDescription;
   const twitterUrl = canonicalUrl;
 
+  const theme = useTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamGenreIds = searchParams.get('genre');
@@ -102,13 +105,8 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
     router.replace({ query: searchParams.toString() });
   };
 
-  const handleSelectAllGenre = () => {
-    searchParams.delete('genre');
-    router.replace({ query: searchParams.toString() });
-  };
-
   const getMovies = async ({ scrollDirection = 'DOWN' } = {}) => {
-    if (fetchMoviesRequestStates.pending) return;
+    if (fetchMoviesRequestStates.pending || shouldLoadMoreMovies) return;
 
     try {
       const newPrimaryReleaseYear =
@@ -131,7 +129,6 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
 
       const { results: movies } = response;
 
-      // setPrimaryReleaseYears((val) => [...val, newPrimaryReleaseYear].sort());
       if (scrollDirection === 'DOWN') {
         setPrimaryReleaseYears((val) => [...val, newPrimaryReleaseYear]);
       } else {
@@ -202,45 +199,33 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   let nodeToRender;
   if (primaryReleaseYears.length) {
     nodeToRender = (
-      <>
-        {primaryReleaseYears.map((year) => {
-          const movies = moviesListData.moviesByYear[year] || [];
-          return movies.map((movie) => (
-            <div style={{ color: 'white' }} key={movie.id}>
-              {year} - {movie.title}
-            </div>
-          ));
-        })}
+      <Box mb="24px">
+        <MoviesList
+          moviesByYear={moviesListData.moviesByYear}
+          primaryReleaseYears={primaryReleaseYears}
+          genresList={genresList}
+        />
         {shouldLoadMoreMovies ? (
-          <Box ref={loadMoreMoviesRef} mt="-24px" p="24px">
+          <Box ref={loadMoreMoviesRef} mt="24px" p="24px">
             {fetchMoviesRequestStates.pending ? (
               <LabelXSmall textAlign="center">Loading...</LabelXSmall>
             ) : fetchMoviesRequestStates.rejected ? (
-              <button onClick={handleLoadMoreMoviesAfterFailureBtnClick}>
-                Load More Movies
-              </button>
-            ) : null}
-            {/* <Button
-                size={Button.SIZES.X_SMALL}
-                color={Button.COLORS.NEUTRAL}
-                variant={Button.VARIANTS.OUTLINED}
+              <Button
                 fullWidth
                 text="Load More Movies"
                 onClick={handleLoadMoreMoviesAfterFailureBtnClick}
-              /> */}
+              />
+            ) : null}
           </Box>
         ) : null}
-      </>
+      </Box>
     );
   } else {
     nodeToRender = (
-      <Flex
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
-        mt="56px"
-      >
-        <TitleXSmall mb="12px">No movies to show yet!</TitleXSmall>
+      <Flex flexDirection="column" justifyContent="center" alignItems="center">
+        <TitleXSmall mb="12px" color={theme.colors.TEXT_INVERTED}>
+          No movies to show yet!
+        </TitleXSmall>
       </Flex>
     );
   }
@@ -263,12 +248,12 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
         <meta name="twitter:url" content={twitterUrl} />
       </Head>
       <AppUIShell>
-        <PageContainer>
+        <Header>
           {genresList.length ? (
-            <Styles.FiltersWrapper>
+            <Styles.FiltersWrapper mt="12px">
               <Styles.FilterChip
                 key="all_genre"
-                onClick={handleSelectAllGenre}
+                onClick={handleGenreFiltersReset}
                 isSelected={!filteredGenreIds?.length}
               >
                 <Styles.FilterText>All</Styles.FilterText>
@@ -302,24 +287,11 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
                   </Styles.FilterChip>
                 );
               })}
-              {filteredGenreIds instanceof Array && filteredGenreIds.length ? (
-                <button onClick={handleGenreFiltersReset}>
-                  <CloseIcon />
-                  Reset Filters
-                </button>
-              ) : null}
-              {/* <Button
-                  variant={Button.VARIANTS.TRANSPARENT}
-                  color={Button.COLORS.NEGATIVE}
-                  size={Button.SIZES.X_SMALL}
-                  iconLeft={<CloseIcon />}
-                  text="Reset Filters"
-                  onClick={handleGenreFiltersReset}
-                /> */}
             </Styles.FiltersWrapper>
           ) : null}
-          {nodeToRender}
-        </PageContainer>
+        </Header>
+
+        <PageContainer mt="24px">{nodeToRender}</PageContainer>
       </AppUIShell>
     </>
   );

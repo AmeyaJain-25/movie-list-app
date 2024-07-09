@@ -2,13 +2,15 @@ import styled, { css } from 'styled-components';
 
 import { Flex } from '~/components/atoms';
 import { ParaMediumStrong } from '~/components/typography';
-import { mediaQueryMobileOrTablet } from '~/styles/mixins';
+import { hideScrollbarCss, mediaQueryMobileOrTablet } from '~/styles/mixins';
 
 export const FiltersWrapper = styled(Flex)`
   align-items: center;
-  flex-wrap: wrap;
   width: 100%;
   gap: 12px;
+  overflow-x: scroll;
+
+  ${hideScrollbarCss};
 `;
 
 export const FilterChip = styled(Flex)`

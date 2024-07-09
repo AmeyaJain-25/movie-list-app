@@ -13,3 +13,5 @@ export const defaultApiParams = {
   sortBy: DEFAULT_SORT_BY,
   voteCountGte: DEFAULT_VOTE_COUNT_GREATER_THAN,
 };
+
+export const MOVIE_IMG_BASE_PATH = 'https://image.tmdb.org/t/p/w300';
