@@ -2,7 +2,6 @@ import { useTheme } from 'styled-components';
 
 import { MOVIE_IMG_BASE_PATH } from '~/constants';
 import {
-  LabelMedium,
   LabelSmall,
   LabelXSmall,
   ParaMedium,

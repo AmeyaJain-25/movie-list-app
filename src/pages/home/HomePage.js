@@ -106,7 +106,7 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   };
 
   const getMovies = async ({ scrollDirection = 'DOWN' } = {}) => {
-    if (fetchMoviesRequestStates.pending || shouldLoadMoreMovies) return;
+    if (fetchMoviesRequestStates.pending || !shouldLoadMoreMovies) return;
 
     try {
       const newPrimaryReleaseYear =
