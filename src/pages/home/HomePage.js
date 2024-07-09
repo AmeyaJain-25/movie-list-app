@@ -45,13 +45,11 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   const [primaryReleaseYears, setPrimaryReleaseYears] = useState([
     DEFAULT_PRIMARY_RELEASE_YEAR,
   ]);
-  const [moviesListData, updateMoviesListData] = useImmer({
-    moviesByYear: {
-      [DEFAULT_PRIMARY_RELEASE_YEAR]: initialMoviesList.slice(
-        0,
-        MAX_MOVIES_PER_YEAR
-      ),
-    },
+  const [moviesByYear, updateMoviesByYear] = useImmer({
+    [DEFAULT_PRIMARY_RELEASE_YEAR]: initialMoviesList.slice(
+      0,
+      MAX_MOVIES_PER_YEAR
+    ),
   });
 
   const [lastUpScroll, setLastUpScroll] = useState(new Date());
@@ -75,13 +73,11 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   }, [searchParamGenreIds]);
 
   const updateInitialMoviesListData = () => {
-    updateMoviesListData((draft) => {
-      draft.moviesByYear = {
-        [DEFAULT_PRIMARY_RELEASE_YEAR]: initialMoviesList.slice(
-          0,
-          MAX_MOVIES_PER_YEAR
-        ),
-      };
+    updateMoviesByYear({
+      [DEFAULT_PRIMARY_RELEASE_YEAR]: initialMoviesList.slice(
+        0,
+        MAX_MOVIES_PER_YEAR
+      ),
     });
   };
 
@@ -132,12 +128,10 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
         sortBy(uniq([...val, primaryReleaseYear]))
       );
 
-      updateMoviesListData((draft) => {
-        draft.moviesByYear = {
-          ...draft.moviesByYear,
-          [primaryReleaseYear]: movies.slice(0, MAX_MOVIES_PER_YEAR),
-        };
-      });
+      updateMoviesByYear((draft) => ({
+        ...draft,
+        [primaryReleaseYear]: movies.slice(0, MAX_MOVIES_PER_YEAR),
+      }));
 
       if (scrollDirection === 'UP') {
         setLastUpScroll(new Date());
@@ -150,7 +144,12 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   };
 
   const handleLoadMoreMoviesAfterFailureBtnClick = ({ scrollDirection }) => {
-    getMovies({ scrollDirection });
+    const newPrimaryReleaseYear =
+      scrollDirection === 'UP'
+        ? oldestPrimaryReleaseYear - 1
+        : latestPrimaryReleaseYear + 1;
+
+    getMovies({ scrollDirection, primaryReleaseYear: newPrimaryReleaseYear });
   };
 
   const handleObserverScrollUp = useCallback(
@@ -230,7 +229,7 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
   }, [handleObserverScrollDown, fetchMoviesRequestStates.rawState]);
 
   useEffect(() => {
-    if (!isEmpty(moviesListData.moviesByYear)) {
+    if (!isEmpty(moviesByYear)) {
       updateInitialMoviesListData();
       setPrimaryReleaseYears([DEFAULT_PRIMARY_RELEASE_YEAR]);
       setLastUpScroll(new Date());
@@ -262,7 +261,7 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
           ) : null}
         </Box>
         <MoviesList
-          moviesByYear={moviesListData.moviesByYear}
+          moviesByYear={moviesByYear}
           primaryReleaseYears={primaryReleaseYears}
           genresList={genresList}
         />
