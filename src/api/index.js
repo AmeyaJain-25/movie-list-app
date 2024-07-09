@@ -1,1 +1,1 @@
-export * as templateApi from './template';
+export * as movieApi from './movie';

@@ -30,8 +30,8 @@ const nextConfig = {
         destination: '/api/healthz',
       },
       {
-        source: '/api/:path*',
-        destination: `https://api.themoviedb.org/3/:path*/`,
+        source: '/:path*',
+        destination: `https://api.themoviedb.org/3/:path*`,
       },
     ];
   },

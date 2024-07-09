@@ -5,7 +5,8 @@ import { isProductionHostname, isServer } from '~/utils';
 
 const LOGGING_ENABLED = (() => {
   if (typeof window !== 'undefined') {
-    if (!isProductionHostname()) {
+    const { hostname } = window.location;
+    if (!isProductionHostname(hostname)) {
       return true;
     }
   }

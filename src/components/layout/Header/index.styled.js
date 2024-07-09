@@ -25,10 +25,10 @@ export const HeaderRoot = styled(Box)`
   top: 0;
   left: 0;
   right: 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.BORDER_NEUTRAL_WEAK};
+  background: ${({ theme }) => theme.colors.BG_NEUTRAL_STRONG};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.BORDER_NEGATIVE_NORMAL};
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
   z-index: 999;
-  background: ${({ theme }) => theme.colors.BG_SURFACE};
 
   ${mediaQueryMobileOrTablet} {
     height: 72px;

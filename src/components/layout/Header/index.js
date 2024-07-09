@@ -1,10 +1,13 @@
+import { useTheme } from 'styled-components';
+
 import { Flex } from '~/components/atoms';
+import { TitleSmall } from '~/components/typography';
 
 import * as Styles from './index.styled';
 
-import { TitleSmall } from '~/components/typography';
-
 const Header = () => {
+  const theme = useTheme();
+
   return (
     <Styles.Root as="header">
       <Styles.HeaderRoot>
@@ -15,7 +18,12 @@ const Header = () => {
             height="100%"
           >
             <Styles.LogoContainer href="/" title="Movie DB">
-              <TitleSmall>Movie DB</TitleSmall>
+              <TitleSmall
+                color={theme.colors.TEXT_NEGATIVE_NORMAL}
+                style={{ textTransform: 'uppercase' }}
+              >
+                MovieFix
+              </TitleSmall>
             </Styles.LogoContainer>
           </Flex>
         </Styles.Container>

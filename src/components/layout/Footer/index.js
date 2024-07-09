@@ -1,3 +1,5 @@
+import { useTheme } from 'styled-components';
+
 import { getCopyrightYear } from '~/utils';
 import { LabelSmall, TitleSmall } from '~/components/typography';
 
@@ -6,6 +8,7 @@ import SectionContainer from '../SectionContainer';
 import * as Styles from './index.styled';
 
 const Footer = ({ ...rest }) => {
+  const theme = useTheme();
   const copyrightYear = getCopyrightYear();
 
   return (
@@ -13,7 +16,9 @@ const Footer = ({ ...rest }) => {
       <SectionContainer>
         <Styles.ContentWrapper>
           <Styles.LogoContainer href="/" title="Movie DB">
-            <TitleSmall>Movie DB</TitleSmall>
+            <TitleSmall color={theme.colors.TEXT_NEGATIVE_STRONG}>
+              Movie DB
+            </TitleSmall>
           </Styles.LogoContainer>
           <Styles.CopyrightContainer>
             <LabelSmall style={{ pointerEvents: 'none' }} as="p">

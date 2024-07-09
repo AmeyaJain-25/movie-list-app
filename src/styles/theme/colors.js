@@ -5,13 +5,6 @@ const colors = {
   ...baseColors,
 
   /************ BG ************/
-  // BRAND
-  BG_BRAND_WEAKEST: baseColors.orange[5],
-  BG_BRAND_WEAKER: baseColors.orange[10],
-  BG_BRAND_WEAK: baseColors.orange[40],
-  BG_BRAND_NORMAL: baseColors.orange[50],
-  BG_BRAND_STRONG: baseColors.orange[60],
-
   // NEGATIVE
   BG_NEGATIVE_WEAKEST: baseColors.red[5],
   BG_NEGATIVE_WEAKER: baseColors.red[10],
@@ -29,12 +22,6 @@ const colors = {
   BG_INVERTED: baseColors.grey[100],
 
   /************ TEXT ************/
-  // BRAND
-  TEXT_BRAND_WEAKEST: baseColors.orange[20],
-  TEXT_BRAND_WEAK: baseColors.orange[40],
-  TEXT_BRAND_NORMAL: baseColors.orange[50],
-  TEXT_BRAND_STRONG: baseColors.orange[60],
-
   // NEGATIVE
   TEXT_NEGATIVE_WEAKEST: baseColors.red[20],
   TEXT_NEGATIVE_WEAK: baseColors.red[40],
@@ -50,11 +37,6 @@ const colors = {
   TEXT_NEUTRAL_STRONG: baseColors.grey[90],
 
   /************ BORDER ************/
-  // BRAND
-  BORDER_BRAND_WEAKEST: baseColors.orange[10],
-  BORDER_BRAND_WEAK: baseColors.orange[30],
-  BORDER_BRAND_NORMAL: baseColors.orange[50],
-  BORDER_BRAND_STRONG: baseColors.orange[60],
 
   // NEGATIVE
   BORDER_NEGATIVE_WEAKEST: baseColors.red[10],
@@ -70,11 +52,6 @@ const colors = {
   BORDER_NEUTRAL_STRONG: baseColors.grey[60],
 
   /************ ICON ************/
-  // BRAND
-  ICON_BRAND_WEAKEST: baseColors.orange[20],
-  ICON_BRAND_WEAK: baseColors.orange[40],
-  ICON_BRAND_NORMAL: baseColors.orange[50],
-  ICON_BRAND_STRONG: baseColors.orange[60],
 
   // NEGATIVE
   ICON_NEGATIVE_WEAKEST: baseColors.red[20],

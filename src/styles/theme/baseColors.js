@@ -1,16 +1,3 @@
-export const orange = {
-  5: '#FFF8F2',
-  10: '#FFE3CD',
-  20: '#FFC89B',
-  30: '#FFAC68',
-  40: '#FF9136',
-  50: '#FF7504',
-  60: '#CC5E03',
-  70: '#994602',
-  80: '#662F02',
-  90: '#331701',
-};
-
 export const grey = {
   0: '#FFFFFF',
   5: '#FBFBFB',
@@ -40,7 +27,6 @@ export const red = {
 };
 
 const baseColors = {
-  orange,
   grey,
   red,
 };

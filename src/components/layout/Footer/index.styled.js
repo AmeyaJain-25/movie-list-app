@@ -9,7 +9,7 @@ import {
 } from '~/styles/mixins';
 
 export const Root = styled(Box)`
-  background-color: ${({ theme }) => theme.colors.BG_NEUTRAL_WEAKEST};
+  background-color: ${({ theme }) => theme.colors.BG_NEUTRAL_STRONG};
 `;
 
 export const ContentWrapper = styled(Box)`
