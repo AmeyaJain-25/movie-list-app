@@ -3,6 +3,8 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useImmer } from 'use-immer';
 import { useTheme } from 'styled-components';
+import { isEmpty, sortBy, uniq } from 'lodash';
+import { subMilliseconds } from 'date-fns';
 
 import AppUIShell from '~/components/core/AppUIShell';
 import PageContainer from '~/components/layout/PageContainer';
@@ -52,6 +54,8 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
     },
   });
 
+  const [lastUpScroll, setLastUpScroll] = useState(new Date());
+  const loadPrevMoviesRef = useRef(null);
   const loadMoreMoviesRef = useRef(null);
   const latestPrimaryReleaseYear =
     primaryReleaseYears[primaryReleaseYears.length - 1];
@@ -105,19 +109,14 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
     router.replace({ query: searchParams.toString() });
   };
 
-  const getMovies = async ({ scrollDirection = 'DOWN' } = {}) => {
+  const getMovies = async ({ scrollDirection, primaryReleaseYear } = {}) => {
     if (fetchMoviesRequestStates.pending || !shouldLoadMoreMovies) return;
 
     try {
-      const newPrimaryReleaseYear =
-        scrollDirection === 'DOWN'
-          ? latestPrimaryReleaseYear + 1
-          : oldestPrimaryReleaseYear - 1;
-
       fetchMoviesRequestHandlers.pending();
 
       const payload = {
-        primaryReleaseYear: newPrimaryReleaseYear,
+        primaryReleaseYear,
         ...defaultApiParams,
       };
 
@@ -129,18 +128,20 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
 
       const { results: movies } = response;
 
-      if (scrollDirection === 'DOWN') {
-        setPrimaryReleaseYears((val) => [...val, newPrimaryReleaseYear]);
-      } else {
-        setPrimaryReleaseYears((val) => [newPrimaryReleaseYear, ...val]);
-      }
+      setPrimaryReleaseYears((val) =>
+        sortBy(uniq([...val, primaryReleaseYear]))
+      );
 
       updateMoviesListData((draft) => {
         draft.moviesByYear = {
           ...draft.moviesByYear,
-          [newPrimaryReleaseYear]: movies.slice(0, MAX_MOVIES_PER_YEAR),
+          [primaryReleaseYear]: movies.slice(0, MAX_MOVIES_PER_YEAR),
         };
       });
+
+      if (scrollDirection === 'UP') {
+        setLastUpScroll(new Date());
+      }
 
       fetchMoviesRequestHandlers.fulfilled(response.data);
     } catch (error) {
@@ -148,58 +149,118 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
     }
   };
 
-  const handleLoadMoreMoviesAfterFailureBtnClick = () => {
-    getMovies();
+  const handleLoadMoreMoviesAfterFailureBtnClick = ({ scrollDirection }) => {
+    getMovies({ scrollDirection });
   };
 
-  const handleObserver = useCallback(
+  const handleObserverScrollUp = useCallback(
     (entries, observer) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && shouldLoadMoreMovies) {
-          getMovies();
-          observer.unobserve(entry.target);
+        if (entry.isIntersecting) {
+          const newPrimaryReleaseYear = oldestPrimaryReleaseYear - 1;
+
+          if (subMilliseconds(new Date(), 200) < lastUpScroll) {
+            setTimeout(() => {
+              observer.observe(entry.target);
+            }, 200);
+            return;
+          }
+
+          if (!primaryReleaseYears.includes(newPrimaryReleaseYear)) {
+            getMovies({
+              scrollDirection: 'UP',
+              primaryReleaseYear: newPrimaryReleaseYear,
+            });
+            observer.unobserve(entry.target);
+          }
         }
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [primaryReleaseYears]
+    [primaryReleaseYears, oldestPrimaryReleaseYear]
+  );
+  const handleObserverScrollDown = useCallback(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && shouldLoadMoreMovies) {
+          const newPrimaryReleaseYear = latestPrimaryReleaseYear + 1;
+
+          if (!primaryReleaseYears.includes(newPrimaryReleaseYear)) {
+            getMovies({
+              scrollDirection: 'DOWN',
+              primaryReleaseYear: newPrimaryReleaseYear,
+            });
+            observer.unobserve(entry.target);
+          }
+        }
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [primaryReleaseYears, latestPrimaryReleaseYear, shouldLoadMoreMovies]
   );
 
   useEffect(() => {
-    if (fetchMoviesRequestStates.pending || fetchMoviesRequestStates.rejected)
+    if (fetchMoviesRequestStates.pending || fetchMoviesRequestStates.rejected) {
       return;
+    }
 
     const intersectionObserverOptions = {
       root: null,
       rootMargin: '0px',
       threshold: 0,
     };
-    const observer = new IntersectionObserver(
-      handleObserver,
+
+    const scrollUpObserver = new IntersectionObserver(
+      handleObserverScrollUp,
+      intersectionObserverOptions
+    );
+    const scrollDownObserver = new IntersectionObserver(
+      handleObserverScrollDown,
       intersectionObserverOptions
     );
 
-    if (loadMoreMoviesRef.current) observer.observe(loadMoreMoviesRef.current);
+    if (loadPrevMoviesRef.current) {
+      scrollUpObserver.observe(loadPrevMoviesRef.current);
+    }
+    if (loadMoreMoviesRef.current) {
+      scrollDownObserver.observe(loadMoreMoviesRef.current);
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleObserver, fetchMoviesRequestStates.rawState]);
+  }, [handleObserverScrollDown, fetchMoviesRequestStates.rawState]);
 
   useEffect(() => {
-    updateInitialMoviesListData();
-    setPrimaryReleaseYears([DEFAULT_PRIMARY_RELEASE_YEAR]);
-    fetchMoviesRequestHandlers.fulfilled(initialMoviesList); // To set nextCursor and update data on filter change
+    if (!isEmpty(moviesListData.moviesByYear)) {
+      updateInitialMoviesListData();
+      setPrimaryReleaseYears([DEFAULT_PRIMARY_RELEASE_YEAR]);
+      setLastUpScroll(new Date());
+      fetchMoviesRequestHandlers.fulfilled(initialMoviesList); // To set nextCursor and update data on filter change
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredGenreIds]);
-
-  useEffect(() => {
-    fetchMoviesRequestHandlers.fulfilled(initialMoviesList); // To set nextCursor and update data on filter change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   let nodeToRender;
   if (primaryReleaseYears.length) {
     nodeToRender = (
       <Box mb="24px">
+        <Box ref={loadPrevMoviesRef} mt="-66px" mb="24px" p="24px">
+          {fetchMoviesRequestStates.pending ? (
+            <LabelXSmall textAlign="center">
+              Loading previous year movies...
+            </LabelXSmall>
+          ) : fetchMoviesRequestStates.rejected ? (
+            <Button
+              fullWidth
+              text="Load Previous Year Movies"
+              onClick={() =>
+                handleLoadMoreMoviesAfterFailureBtnClick({
+                  scrollDirection: 'UP',
+                })
+              }
+            />
+          ) : null}
+        </Box>
         <MoviesList
           moviesByYear={moviesListData.moviesByYear}
           primaryReleaseYears={primaryReleaseYears}
@@ -208,12 +269,18 @@ const HomePage = ({ moviesList: initialMoviesList = [], genresList = [] }) => {
         {shouldLoadMoreMovies ? (
           <Box ref={loadMoreMoviesRef} mt="24px" p="24px">
             {fetchMoviesRequestStates.pending ? (
-              <LabelXSmall textAlign="center">Loading...</LabelXSmall>
+              <LabelXSmall textAlign="center">
+                Loading next year movies...
+              </LabelXSmall>
             ) : fetchMoviesRequestStates.rejected ? (
               <Button
                 fullWidth
                 text="Load More Movies"
-                onClick={handleLoadMoreMoviesAfterFailureBtnClick}
+                onClick={() =>
+                  handleLoadMoreMoviesAfterFailureBtnClick({
+                    scrollDirection: 'DOWN',
+                  })
+                }
               />
             ) : null}
           </Box>
